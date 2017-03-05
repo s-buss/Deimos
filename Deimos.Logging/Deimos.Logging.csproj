@@ -41,15 +41,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Implementations\ConsoleLog.cs" />
     <Compile Include="Implementations\FileLog.cs" />
     <Compile Include="ILog.cs" />
     <Compile Include="ILogger.cs" />
-    <Compile Include="ILoggerExtensions.cs" />
     <Compile Include="Log.cs" />
-    <Compile Include="LogBase.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="LogLevel.cs" />
     <Compile Include="Implementations\NullLog.cs" />
+    <Compile Include="LogRecord.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

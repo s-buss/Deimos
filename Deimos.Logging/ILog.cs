@@ -2,8 +2,6 @@
 {
     interface ILog
     {
-        ILogger Root { get; }
-
-        ILogger CreateLogger(string name);
+        void AppendRecord(LogRecord rec);
     }
 }
