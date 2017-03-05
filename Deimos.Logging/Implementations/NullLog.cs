@@ -4,6 +4,8 @@
     {
         private class NullLogger : ILogger
         {
+            public LogLevel Level { get; set; }
+
             public void Log(LogLevel lvl, string msg, params object[] args)
             { }
         }

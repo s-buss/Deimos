@@ -1,13 +1,28 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Threading;
 
 namespace Deimos.Logging.Implementations
 {
     internal class ConsoleLog : LogBase
     {
+        private struct LogRecord
+        {
+            public DateTime TimeStamp;
+            public string Logger;
+            public LogLevel Level;
+            public string Message;
+        }
+
+        private BlockingCollection<LogRecord> _queue = new BlockingCollection<LogRecord>();
+        private Thread _writerThread;
+
         private class ConsoleLogger : ILogger
         {
             private readonly ConsoleLog _log;
             private readonly string _name;
+
+            private LogLevel _level = LogLevel.Debug;
 
             public ConsoleLogger(ConsoleLog log, string name)
             {
@@ -15,13 +30,21 @@ namespace Deimos.Logging.Implementations
                 _name = name;
             }
 
+            public LogLevel Level { get { return _level; } set { _level = value; } }
+
             public void Log(LogLevel lvl, string msg, params object[] args)
             {
-                Console.Write(DateTime.UtcNow.ToString("yyyy-MM-dd-HH:mm:ss.fff "));
-                Console.Write("{0} ", lvl.ToString()[0]);
-                Console.Write("{0} ", _name);
-                Console.WriteLine(string.Format(msg, args));
+                if (lvl >= _level)
+                {
+                    _log.Log(_name, lvl, msg, args);
+                }
             }
+        }
+
+        public ConsoleLog()
+        {
+            _writerThread = new Thread(AppendRecords) { IsBackground = true };
+            _writerThread.Start();
         }
 
         protected override ILogger Create(string name)
@@ -31,12 +54,25 @@ namespace Deimos.Logging.Implementations
 
         private void Log(string name, LogLevel level, string msg, object[] args)
         {
-            lock (this)
+            _queue.Add(new LogRecord
             {
-                Console.Write(DateTime.UtcNow.ToString("yyyy-MM-dd-HH:mm:ss.fff "));
-                Console.Write("{0} ", level.ToString()[0]);
-                Console.Write("{0} ", name);
-                Console.WriteLine(string.Format(msg, args));
+                TimeStamp = DateTime.UtcNow,
+                Logger = name,
+                Level = level,
+                Message = string.Format(msg, args)
+            });
+        }
+
+        private void AppendRecords()
+        {
+            while (true)
+            {
+                LogRecord rec = _queue.Take();
+
+                Console.Write(rec.TimeStamp.ToString("yyyy-MM-dd-HH:mm:ss.fff "));
+                Console.Write("{0} ", rec.Level.ToString()[0]);
+                Console.Write("{0} ", rec.Logger);
+                Console.WriteLine(rec.Message);
             }
         }
     }
